@@ -1,0 +1,12 @@
+---
+package-name: airflow-providers-siasg
+name: SIASG
+description: |
+    `SIASG <https://github.com/CarlosAdp/airflow-providers-siasg/>`__
+
+versions:
+  - 1.0.0
+
+additional-dependencies:
+  - apache-airflow>=2.1.0
+  - requests

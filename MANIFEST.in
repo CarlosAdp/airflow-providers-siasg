@@ -1,0 +1,1 @@
+recursive-include airflow/providers/tesouro_gerencial *.yaml
