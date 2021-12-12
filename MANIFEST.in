@@ -1,1 +1,1 @@
-recursive-include airflow/providers/tesouro_gerencial *.yaml
+recursive-include airflow/providers/siasg *.yaml

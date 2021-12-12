@@ -7,6 +7,7 @@ description: |
 versions:
   - 1.0.0
   - 1.0.1
+  - 1.0.2
 
 additional-dependencies:
   - apache-airflow>=2.1.0
@@ -28,5 +29,5 @@ hook-class-names:  # deprecated - to be removed after providers add dependency o
 
 
 connection-types:
-  - hook-class-name: airflow.providers.siasg.dw.hooks.siasg.DWSIASGHook
+  - hook-class-name: airflow.providers.siasg.dw.hooks.dw.DWSIASGHook
     connection-type: dw_siasg
