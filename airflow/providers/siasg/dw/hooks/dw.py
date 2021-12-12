@@ -106,7 +106,8 @@ class DWSIASGHook(BaseHook):
 
         self._navegador = webdriver.Firefox(
             options=opcoes,
-            executable_path=GeckoDriverManager().install()
+            executable_path=GeckoDriverManager().install(),
+            service_log_path=os.path.devnull
         )
 
         return self
