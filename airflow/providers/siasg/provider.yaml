@@ -10,6 +10,12 @@ versions:
 additional-dependencies:
   - apache-airflow>=2.1.0
   - requests
+  - selenium-wire
+  - webdriver-manager
+  - humanize
+  - pandas
+  - apache-airflow[mongo]
+  - openpyxl
 
 hooks:
   - integration-name: DW-SIASG
