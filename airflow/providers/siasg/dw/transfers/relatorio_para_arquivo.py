@@ -28,7 +28,7 @@ class DWSIASGRelatorioParaArquivoOperator(BaseOperator):
     id_relatorio: str
     destino: str
     respostas_prompts: List[str]
-    timeout: int
+    timeout_segundos: int
 
     def __init__(
         self,
@@ -36,7 +36,7 @@ class DWSIASGRelatorioParaArquivoOperator(BaseOperator):
         id_relatorio: str,
         destino: str,
         respostas_prompts: List[str] = None,
-        timeout: int = 60,
+        timeout_segundos: int = 60,
         **kwargs
     ) -> None:
         super().__init__(**kwargs)
@@ -44,7 +44,7 @@ class DWSIASGRelatorioParaArquivoOperator(BaseOperator):
         self.id_relatorio = id_relatorio
         self.destino = destino
         self.respostas_prompts = respostas_prompts
-        self.timeout = timeout
+        self.timeout_segundos = timeout_segundos
 
     def execute(self, context: Any) -> None:
         self.log.info(
@@ -59,7 +59,7 @@ class DWSIASGRelatorioParaArquivoOperator(BaseOperator):
         with DWSIASGHook(self.id_conexao) as hook:
             local, tamanho = hook.baixa_para_excel(
                 self.id_relatorio, self.destino, respostas_prompts,
-                self.timeout
+                self.timeout_segundos
             )
 
         self.log.info('Download realizado com sucesso para "%s".', local)
