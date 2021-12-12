@@ -134,7 +134,7 @@ class DWSIASGHook(BaseHook):
         :type id_relatorio: str
         :param destino: caminho onde arquivo Excel será baixado. Pode ser um
         arquivo terminando em ".xlsx" ou um diretório terminando em "/"
-        :type id_relatorio: str
+        :type destino: str
         :param repostas_prompts: lista de respostas para prompts do relatório
         :type repostas_prompts: List[str]
         :param timeout_segundos: tempo máximo de espera em segundos
