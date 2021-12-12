@@ -1,6 +1,6 @@
 from datetime import datetime
 from time import sleep
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 import os
 import re
 import shutil
@@ -8,8 +8,8 @@ import tempfile
 
 from airflow.hooks.base import BaseHook
 from airflow.exceptions import AirflowException
-from seleniumwire import webdriver
 from selenium.common.exceptions import TimeoutException
+from seleniumwire import webdriver
 from webdriver_manager.firefox import GeckoDriverManager
 
 
@@ -56,6 +56,7 @@ class DWSIASGHook(BaseHook):
         'reportViewMode': '1',
         'uid': None,
         'pwd': None,
+        'valuePromptAnswers': None,
     }
 
     id_conexao: str
@@ -118,12 +119,13 @@ class DWSIASGHook(BaseHook):
         )
 
         self._navegador.close()
-        shutil.rmtree(self._diretorio_download, ignore_errors=True)
+        # shutil.rmtree(self._diretorio_download, ignore_errors=True)
 
     def baixa_para_excel(
         self,
         id_relatorio: str,
         destino: str,
+        respostas_prompts: List[str] = None,
         timeout_segundos: int = 60
     ) -> Tuple[str, int]:
         '''Baixa o relatório para um arquivo local dentro de um timeout.
@@ -133,21 +135,25 @@ class DWSIASGHook(BaseHook):
         :param destino: caminho onde arquivo Excel será baixado. Pode ser um
         arquivo terminando em ".xlsx" ou um diretório terminando em "/"
         :type id_relatorio: str
+        :param repostas_prompts: lista de respostas para prompts do relatório
+        :type repostas_prompts: List[str]
         :param timeout_segundos: tempo máximo de espera em segundos
         :type timeout_segundos: int, opcional
         :return: caminho absoluto e tamanho em bytes do arquivo
         :rtype: Tuple[str, int]
         '''
         self.log.info(
-            'Baixando relatório com ID "%s" para "%s"',
-            id_relatorio, destino
+            'Baixando relatório com ID "%s" para "%s" com prompts respondidos '
+            'como: %s',
+            id_relatorio, destino, respostas_prompts or ''
         )
 
         payload = self.PAYLOAD.copy()
         payload.update({
             'reportID': id_relatorio,
             'uid': self.cpf,
-            'pwd': self.senha
+            'pwd': self.senha,
+            'valuePromptAnswers': '^'.join(respostas_prompts or [])
         })
         url = self.URL + '?' + '&'.join(
             f'{chave}={valor}' for chave, valor in payload.items()
@@ -158,25 +164,29 @@ class DWSIASGHook(BaseHook):
         inicio = datetime.now()
 
         try:
-            requisicao = self._navegador.wait_for_request(
-                'https://dw.comprasnet.gov.br/dwcompras/export/',
-                timeout=timeout_segundos
-            )
+            while (resposta := self._navegador.wait_for_request(
+                'https://dw.comprasnet.gov.br/dwcompras/export/'
+            ).response) is None \
+                    or not (match := re.findall(
+                        r'attachment;filename\*=([^;]*);',
+                        resposta.headers.get('Content-Disposition', '')
+                    )):
+                del self._navegador.requests
+                if (datetime.now() - inicio).seconds > timeout_segundos:
+                    raise TimeoutException
+
         except TimeoutException:
             raise AirflowException(
-                f'Não foi possível gerar o relatório "{id_relatorio}" em até '
+                f'A execução do relatório "{id_relatorio}" levou mais do que '
                 f'{timeout_segundos} segundos'
             )
 
-        nome = re.findall(
-            r'attachment;filename\*=([^;]*);',
-            requisicao.response.headers.get('Content-Disposition', '')
-        )[0]
-        local = os.path.join(self._diretorio_download, nome)
-        tamanho = requisicao.response.headers['total-length']
+        local = os.path.join(self._diretorio_download, match[0])
+        tamanho = resposta.headers['total-length']
 
         # Esperar download do arquivo finalizar
-        while not os.path.getsize(local) != tamanho:
+        while (not os.path.isfile(local)) \
+                or (not os.path.getsize(local) != tamanho):
             if (datetime.now() - inicio).seconds > timeout_segundos:
                 raise AirflowException(
                     'Não foi possível realizar o download do relatorio '
@@ -210,10 +220,3 @@ class DWSIASGHook(BaseHook):
                 'password': 'Senha'
             }
         }
-
-
-if __name__ == '__main__':
-    with DWSIASGHook('teste') as hook:
-        hook.baixa_para_excel(
-            '4D9286C311EC58F4AFF20080EF8593F3', '/home/carlos/Download3/', 6
-        )
