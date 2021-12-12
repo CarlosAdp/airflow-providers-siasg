@@ -10,3 +10,16 @@ versions:
 additional-dependencies:
   - apache-airflow>=2.1.0
   - requests
+
+hooks:
+  - integration-name: DW-SIASG
+    python-modules:
+      - airflow.providers.siasg.dw.hooks.dw
+
+hook-class-names:  # deprecated - to be removed after providers add dependency on Airflow 2.2.0+
+  - airflow.providers.siasg.dw.hooks.dw.DWSIASGHook
+
+
+connection-types:
+  - hook-class-name: airflow.providers.siasg.dw.hooks.siasg.DWSIASGHook
+    connection-type: dw_siasg
