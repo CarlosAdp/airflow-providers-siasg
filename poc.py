@@ -7,8 +7,7 @@ PROJETO = 'SIASG+COMPRAS'
 
 # %% Tentando realizar login na página do DW SIASG utilizando a biblioteca
 # `requests`
-
-import requests
+from selenium import webdriver
 
 login_params = {
     'Server': SERVIDOR,
@@ -27,6 +26,29 @@ login_params = {
 url = URL_BASE + '?' + '&'.join(
     f'{chave}={valor}' for chave, valor in login_params.items()
 )
+print(url)
 
 # %% Executa comando
-response = requests.get(url, verify=False, allow_redirects=True)
+from webdriver_manager.firefox import GeckoDriverManager
+
+
+profile = webdriver.FirefoxProfile()
+profile.set_preference('browser.download.folderList', 2)
+profile.set_preference('browser.download.manager.showWhenStarting', False)
+profile.set_preference('browser.download.dir', '/home/carlos/Downloads2')
+profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8')
+
+options = webdriver.FirefoxOptions()
+options.headless = True
+
+driver = webdriver.Firefox(
+    firefox_profile=profile,
+    options=options,
+    executable_path=GeckoDriverManager().install()
+)
+
+driver.get(url)
+
+input()
+
+driver.close()
