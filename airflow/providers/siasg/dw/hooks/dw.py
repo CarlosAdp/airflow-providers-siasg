@@ -1,5 +1,5 @@
 from datetime import datetime
-from time import sleep
+from time import sleep, time
 from typing import Dict, List, Tuple
 import os
 import re
@@ -166,7 +166,8 @@ class DWSIASGHook(BaseHook):
 
         try:
             while (resposta := self._navegador.wait_for_request(
-                'https://dw.comprasnet.gov.br/dwcompras/export/'
+                'https://dw.comprasnet.gov.br/dwcompras/export/',
+                timeout=timeout_segundos
             ).response) is None \
                     or not (match := re.findall(
                         r'attachment;filename\*=([^;]*);',
