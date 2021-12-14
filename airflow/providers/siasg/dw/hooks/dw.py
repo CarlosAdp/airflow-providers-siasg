@@ -11,6 +11,7 @@ from airflow.exceptions import AirflowException
 from selenium.common.exceptions import TimeoutException
 from seleniumwire import webdriver
 from webdriver_manager.firefox import GeckoDriverManager
+import humanize
 
 
 class DWSIASGHook(BaseHook):
@@ -188,7 +189,12 @@ class DWSIASGHook(BaseHook):
 
         # Esperar download do arquivo finalizar
         while (not os.path.isfile(local)) \
-                or (not os.path.getsize(local) != tamanho):
+                or (os.path.getsize(local) != tamanho):
+            self.log.info(
+                'Verificando finalização de downloade de arquivo "%s" '
+                '(tamanho esperado: %d bytes)', local, tamanho
+            )
+
             if (datetime.now() - inicio).seconds > timeout_segundos:
                 raise AirflowException(
                     'Não foi possível realizar o download do relatorio '
@@ -201,8 +207,8 @@ class DWSIASGHook(BaseHook):
         caminho_final = shutil.copy(local, destino)
 
         self.log.info(
-            'Relatório "%s" baixado para "%s" com sucesso',
-            id_relatorio, caminho_final
+            'Relatório "%s" baixado para "%s" com sucesso com tamanho %s',
+            id_relatorio, caminho_final, humanize.naturalsize(tamanho)
         )
 
         return str(caminho_final), tamanho
