@@ -120,7 +120,7 @@ class DWSIASGHook(BaseHook):
         )
 
         self._navegador.close()
-        # shutil.rmtree(self._diretorio_download, ignore_errors=True)
+        shutil.rmtree(self._diretorio_download, ignore_errors=True)
 
     def baixa_para_excel(
         self,
