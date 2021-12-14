@@ -185,7 +185,7 @@ class DWSIASGHook(BaseHook):
             )
 
         local = os.path.join(self._diretorio_download, match[0])
-        tamanho = resposta.headers['total-length']
+        tamanho = int(resposta.headers['total-length'])
 
         # Esperar download do arquivo finalizar
         while (not os.path.isfile(local)) \
