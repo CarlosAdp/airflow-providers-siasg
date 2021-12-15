@@ -1,5 +1,7 @@
-from datetime import datetime
-from time import sleep, time
+from datetime import datetime, timedelta
+from random import randint
+from sys import executable
+from time import sleep
 from typing import Dict, List, Tuple
 import os
 import re
@@ -7,7 +9,7 @@ import shutil
 import tempfile
 
 from airflow.hooks.base import BaseHook
-from airflow.exceptions import AirflowException
+from airflow.exceptions import AirflowException, AirflowRescheduleException
 from selenium.common.exceptions import TimeoutException
 from seleniumwire import webdriver
 from webdriver_manager.firefox import GeckoDriverManager
@@ -105,9 +107,21 @@ class DWSIASGHook(BaseHook):
         )
         opcoes.headless = True
 
+        try:
+            executable_path = GeckoDriverManager().install()
+        except OSError:
+            tempo_espera = timedelta(seconds=randint(60, 5 * 60))
+
+            self.log.error(
+                'Geckodriver está sendo utilizado por muitos processos '
+                'concorrentes. Próxima execução em %d minutos',
+                tempo_espera.seconds // 60
+            )
+            raise AirflowRescheduleException(datetime.now() + tempo_espera)
+
         self._navegador = webdriver.Firefox(
             options=opcoes,
-            executable_path=GeckoDriverManager().install(),
+            executable_path=executable_path,
             service_log_path=os.path.devnull
         )
 
