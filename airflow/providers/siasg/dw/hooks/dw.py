@@ -1,5 +1,4 @@
 from datetime import datetime
-from random import randint
 from time import sleep
 from typing import Dict, List, Tuple
 import os
@@ -8,15 +7,19 @@ import shutil
 import tempfile
 
 from airflow.hooks.base import BaseHook
+from airflow.models.variable import Variable
 from airflow.exceptions import AirflowException
 from selenium.common.exceptions import TimeoutException
 from seleniumwire import webdriver
-from webdriver_manager.firefox import GeckoDriverManager
 import humanize
 
 
 class DWSIASGHook(BaseHook):
     '''Hook para interação com o DW SIASG.
+
+    Este hook utiliza o Geckodriver. É necessário que o mesmo esteja em algum
+    diretório contido na variável de ambiente `PATH` ou que o mesmo esteja
+    definido por variável do Airflow com valor `GECKODRIVER_PATH`.
 
     :param id_conexao: id pra conexão do tipo "dw_siasg"
 
@@ -106,31 +109,19 @@ class DWSIASGHook(BaseHook):
         )
         opcoes.headless = True
 
-        executable_path = None
-        for i in range(1, 11):
-            try:
-                self.log.info('Instalação de Geckodriver: Tentativa #%02d', i)
-                executable_path = GeckoDriverManager().install()
-                break
-            except OSError:
-                self.log.warning(
-                    'Geckodriver está sendo utilizado por muitos processos '
-                    'concorrentes.'
-                )
+        executable_path = Variable.get('GECKODRIVER_PATH', None)
 
-            sleep(randint(0, 10))
-
-        if executable_path is None:
-            raise AirflowException(
-                'Não foi possível utilizar o Geckodriver por concorrência na '
-                'utilização do recurso'
+        if executable_path is not None:
+            self._navegador = webdriver.Firefox(
+                options=opcoes,
+                executable_path=executable_path,
+                service_log_path=os.path.devnull
             )
-
-        self._navegador = webdriver.Firefox(
-            options=opcoes,
-            executable_path=executable_path,
-            service_log_path=os.path.devnull
-        )
+        else:
+            self._navegador = webdriver.Firefox(
+                options=opcoes,
+                service_log_path=os.path.devnull
+            )
 
         return self
 
