@@ -14,6 +14,7 @@ versions:
   - 1.0.6
   - 1.0.7
   - 1.0.8
+  - 1.0.9
 
 additional-dependencies:
   - apache-airflow>=2.1.0

@@ -167,7 +167,8 @@ class DWSIASGHook(BaseHook):
             'reportID': id_relatorio,
             'uid': self.cpf,
             'pwd': self.senha,
-            'valuePromptAnswers': '^'.join(respostas_prompts or [])
+            'valuePromptAnswers': '^'.join(respostas_prompts or []),
+            'promptAnswerMode': 2
         })
         url = self.URL + '?' + '&'.join(
             f'{chave}={valor}' for chave, valor in payload.items()
