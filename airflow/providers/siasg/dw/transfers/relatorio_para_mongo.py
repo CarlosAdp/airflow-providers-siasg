@@ -99,9 +99,12 @@ class DWSIASGRelatorioParaMongoOperator(BaseOperator):
             if self.truncar_colecao:
                 hook.delete_many(self.colecao, {}, self.banco)
 
-            inseridos = hook.insert_many(
-                self.colecao, df.to_dict('records'), self.banco
-            ).inserted_ids
+            if len(df) > 0:
+                inseridos = hook.insert_many(
+                    self.colecao, df.to_dict('records'), self.banco
+                ).inserted_ids
+            else:
+                inseridos = []
 
         self.log.info(
             'Relatório transferido com sucesso, tendo produzido %s registros',
